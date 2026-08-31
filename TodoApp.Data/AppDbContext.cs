@@ -16,6 +16,23 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Тут ми можемо конфігурувати таблиці більш детально, якщо потрібно (Fluent API)
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.Property(e => e.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<TodoTask>(entity =>
+        {
+            entity.Property(e => e.Title)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.HasOne(e => e.Category)
+                .WithMany(c => c.Tasks)
+                .HasForeignKey(e => e.CategoryId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
     }
 }
