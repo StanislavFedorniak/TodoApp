@@ -12,10 +12,13 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
           <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\TodoApp.Data\TodoApp.Data.csproj" />
+      <ProjectReference Include="..\TodoApp.Services\TodoApp.Services.csproj" />
+      <ProjectReference Include="..\TodoApp.Core\TodoApp.Core.csproj" />
     </ItemGroup>
 
 </Project>
