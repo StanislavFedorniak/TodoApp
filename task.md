@@ -14,15 +14,20 @@
 - [x] Оновлено `using` для `NotFoundException`.
 - [x] Запустити проєкт і перевірити роботу CRUD операцій.
 - [x] (Скасовано) Створити глобальний GlobalExceptionHandler (залишено `try-catch`).
+- [x] Створити DTO записи (`TodoTaskDto`, `TodoTaskCreateDto`, `TodoTaskUpdateDto`).
+- [x] Написати `TodoTaskMappingExtensions`.
+- [x] Реалізувати `ITodoTaskService` та `TodoTaskService` (з обробкою `CancellationToken`).
+- [x] Завершити імплементацію сутності `TodoTask` за аналогічним циклом.
+- [x] Створити `TodoTaskController`, додати CRUD-операції.
+- [x] Зареєструвати `ITodoTaskService` та `TodoTaskService` у `Program.cs` (Dependency Injection).
+- [x] Перевірити коректність роботи всіх ендпоінтів (`/api/todotask` та `/api/category`).
+- [x] Провести рефакторинг та стандартизацію назв змінних і обробки винятків у сервісах й контролерах.
 
 ## In Progress (Current Focus)
-- [-] Розпочати імплементацію сутності `TodoTask` за аналогічним циклом (DTO -> Mapping -> Service -> Controller).
+Розробка API-шару повністю завершена. Перехід до клієнтської частини.
 
 ## Next Steps
-- [ ] Створити DTO записи (`TodoTaskDto`, `TodoTaskCreateDto`, `TodoTaskUpdateDto`).
-- [ ] Написати `TodoTaskMappingExtensions`.
-- [ ] Реалізувати `ITodoTaskService` та `TodoTaskService` (з обробкою `CancellationToken`).
-- [ ] Створити `TodoTaskController`, додати CRUD-операції.
+- [ ] Отримати рішення та розпочати розробку клієнтської частини (`todo-app-ui`).
 
 ## Known Issues / Blockers
 - Активні блокери відсутні.

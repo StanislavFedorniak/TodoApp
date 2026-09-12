@@ -18,35 +18,42 @@ public class CategoryService : ICategoryService
 
     public async Task<IEnumerable<CategoryDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var response = await _context.Categories
+        var categories = await _context.Categories
             .OrderByDescending(x => x.Id)
             .Select(c => new CategoryDto(c.Id, c.Name))
             .ToListAsync(cancellationToken);
 
-        return response;
+        return categories;
     }
     
-    public async Task<CategoryDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<CategoryDto> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Categories
+        var category = await _context.Categories
             .Where(c => c.Id == id)
             .Select(c => new CategoryDto(c.Id, c.Name))
             .FirstOrDefaultAsync(cancellationToken);
+
+        if (category is null)
+        {
+            throw new NotFoundException($"Category {id} was not found");
+        }
+
+        return category;
     }
 
     public async Task<CategoryDto> CreateAsync(CategoryCreateDto request, CancellationToken cancellationToken = default)
     {
-        var entity = request.ToEntity();
+        var category = request.ToEntity();
 
-        _context.Categories.Add(entity);
+        _context.Categories.Add(category);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return entity.ToCategoryDto();
+        return category.ToCategoryDto();
     }
 
     public async Task UpdateAsync(Guid id, CategoryUpdateDto request, CancellationToken cancellationToken = default)
     {
-        var category = await _context.Categories.FindAsync(id);
+        var category = await _context.Categories.FindAsync([id], cancellationToken);
 
         if (category is null)
         {
@@ -60,7 +67,7 @@ public class CategoryService : ICategoryService
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var category = await _context.Categories.FindAsync(id);
+        var category = await _context.Categories.FindAsync([id], cancellationToken);
 
         if (category is null)
         {
