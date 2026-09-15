@@ -1,11 +1,14 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
 import { routes } from './app.routes';
-import { provideClientHydration } from '@angular/platform-browser';
+import { API_URL } from './core/tokens/api-url.token';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes), provideClientHydration()
+    provideRouter(routes),
+    provideHttpClient(),
+    { provide: API_URL, useValue: 'https://localhost:7274/api' }
   ]
 };
