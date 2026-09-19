@@ -1,19 +1,67 @@
-﻿<div class="card shadow-sm mb-4">
-  <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Категорії</h5>
+﻿<div class="container mt-4">
+  <h2 class="mb-4">Categories</h2>
+
+  <!-- Error Alert -->
+  @if (error()) {
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      {{ error() }}
+      <button type="button" class="btn-close" (click)="error.set(null)" aria-label="Close"></button>
+    </div>
+  }
+
+  <!-- Add Category Form -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-body">
+      <!-- Розібрати що таке Property Binding та Event Binding -->
+      <form [formGroup]="categoryForm" (ngSubmit)="addCategory()" class="d-flex gap-2">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="New category name"
+          formControlName="name"
+        />
+        <button
+          type="submit"
+          class="btn btn-primary d-flex align-items-center gap-2 px-4"
+          [disabled]="categoryForm.invalid || isSubmitting()"
+        >
+          @if (isSubmitting()) {
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          }
+          Add
+        </button>
+      </form>
+    </div>
   </div>
 
-  // TODO. Розібрати код у цьому блоці
-  <div class="card-body">
-    @if (loading()) {
-      <div class="d-flex justify-content-center my-3">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden"></span>
-        </div>
+  <!-- Categories List -->
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
       </div>
-    }
-
-  // TODO. Продовжити писати html компоненти
-
-  </div>
+    </div>
+  } @else {
+    <ul class="list-group shadow-sm">
+      @for (category of categories(); track category.id) {
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span class="fw-medium">{{ category.name }}</span>
+          <button
+            class="btn btn-sm btn-outline-danger d-flex align-items-center gap-2"
+            [disabled]="deletingCategoryId() === category.id"
+            (click)="deleteCategory(category.id)"
+          >
+            @if (deletingCategoryId() === category.id) {
+              <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            }
+            Delete
+          </button>
+        </li>
+      } @empty {
+        <li class="list-group-item text-center text-muted py-4">
+          No categories found. Start by adding a new one!
+        </li>
+      }
+    </ul>
+  }
 </div>
