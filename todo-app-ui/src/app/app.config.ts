@@ -9,6 +9,6 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideHttpClient(),
-    { provide: API_URL, useValue: 'https://localhost:7274/api' }
+    { provide: API_URL, useValue: 'http://localhost:5293/api' }
   ]
 };

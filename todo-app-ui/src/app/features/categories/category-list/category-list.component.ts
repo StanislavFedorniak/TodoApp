@@ -1,7 +1,8 @@
 ﻿import { Component, inject, OnInit, signal } from '@angular/core';
 import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { CategoryService } from '../../../core/services/category.service';
-import {Category, CategoryCreateDto} from '../../../core/models/category.model';
+import { Category, CategoryCreateDto } from '../../../core/models/category.model';
 
 @Component({
   selector: 'app-category-list',
@@ -30,17 +31,17 @@ export class CategoryListComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.categoryService.getAll().subscribe({
-      next: (data: Category[]) => {
-        this.categories.set(data);
-        this.loading.set(false);
-      },
-      error: (err: unknown) => {
-        this.error.set('Failed to load categories.');
-        this.loading.set(false);
-        console.error('Error loading categories:', err);
-      }
-    });
+    this.categoryService.getAll()
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: (data: Category[]) => {
+          this.categories.set(data);
+        },
+        error: (err: unknown) => {
+          this.error.set('Failed to load categories.');
+          console.error('Error loading categories:', err);
+        }
+      });
   }
 
   addCategory(): void {
@@ -51,34 +52,34 @@ export class CategoryListComponent implements OnInit {
 
     const newCategory: CategoryCreateDto = { name: this.categoryForm.controls.name.value };
 
-    this.categoryService.create(newCategory).subscribe({
-      next: (createdCategory: Category) => {
-        this.categories.update(cats => [...cats, createdCategory]);
-        this.categoryForm.reset();
-        this.isSubmitting.set(false);
-      },
-      error: (err: unknown) => {
-        this.error.set('Failed to create category.');
-        this.isSubmitting.set(false);
-        console.error('Error creating category:', err);
-      }
-    });
+    this.categoryService.create(newCategory)
+      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .subscribe({
+        next: (createdCategory: Category) => {
+          this.categories.update(cats => [...cats, createdCategory]);
+          this.categoryForm.reset();
+        },
+        error: (err: unknown) => {
+          this.error.set('Failed to create category.');
+          console.error('Error creating category:', err);
+        }
+      });
   }
 
   deleteCategory(id: string): void {
     this.deletingCategoryId.set(id);
     this.error.set(null);
 
-    this.categoryService.delete(id).subscribe({
-      next: () => {
-        this.categories.update(cats => cats.filter(c => c.id !== id));
-        this.deletingCategoryId.set(null);
-      },
-      error: (err: unknown) => {
-        this.error.set('Failed to delete category.');
-        this.deletingCategoryId.set(null);
-        console.error('Error deleting category:', err);
-      }
-    });
+    this.categoryService.delete(id)
+      .pipe(finalize(() => this.deletingCategoryId.set(null)))
+      .subscribe({
+        next: () => {
+          this.categories.update(cats => cats.filter(c => c.id !== id));
+        },
+        error: (err: unknown) => {
+          this.error.set('Failed to delete category.');
+          console.error('Error deleting category:', err);
+        }
+      });
   }
 }

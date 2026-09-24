@@ -3,18 +3,19 @@
 
   <!-- Error Alert -->
   @if (error()) {
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" aria-live="assertive">
       {{ error() }}
-      <button type="button" class="btn-close" (click)="error.set(null)" aria-label="Close"></button>
+      <button type="button" class="btn-close" (click)="error.set(null)" aria-label="Close error alert"></button>
     </div>
   }
 
   <!-- Add Category Form -->
   <div class="card mb-4 shadow-sm">
     <div class="card-body">
-      <!-- Розібрати що таке Property Binding та Event Binding -->
       <form [formGroup]="categoryForm" (ngSubmit)="addCategory()" class="d-flex gap-2">
+        <label for="categoryName" class="visually-hidden">New category name</label>
         <input
+          id="categoryName"
           type="text"
           class="form-control"
           placeholder="New category name"
@@ -24,6 +25,7 @@
           type="submit"
           class="btn btn-primary d-flex align-items-center gap-2 px-4"
           [disabled]="categoryForm.invalid || isSubmitting()"
+          [attr.aria-disabled]="categoryForm.invalid || isSubmitting() ? 'true' : null"
         >
           @if (isSubmitting()) {
             <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
@@ -36,9 +38,9 @@
 
   <!-- Categories List -->
   @if (loading()) {
-    <div class="text-center py-5">
+    <div class="text-center py-5" aria-live="polite">
       <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
+        <span class="visually-hidden">Loading categories...</span>
       </div>
     </div>
   } @else {
@@ -49,6 +51,8 @@
           <button
             class="btn btn-sm btn-outline-danger d-flex align-items-center gap-2"
             [disabled]="deletingCategoryId() === category.id"
+            [attr.aria-disabled]="deletingCategoryId() === category.id ? 'true' : null"
+            [attr.aria-label]="'Delete category ' + category.name"
             (click)="deleteCategory(category.id)"
           >
             @if (deletingCategoryId() === category.id) {
