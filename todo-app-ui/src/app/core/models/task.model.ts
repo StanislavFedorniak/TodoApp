@@ -8,14 +8,14 @@
 
 export interface TodoTaskCreateDto {
   title: string;
-  description: string | null;
-  categoryId: string | null;
+  description?: string | null;
+  categoryId?: string | null;
 }
 
 export interface TodoTaskUpdateDto {
   title: string;
-  description: string | null;
+  description?: string | null;
   isCompleted: boolean;
-  categoryId: string | null;
+  categoryId?: string | null;
 }
 
