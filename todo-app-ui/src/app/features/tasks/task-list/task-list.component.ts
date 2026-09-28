@@ -91,6 +91,40 @@ export class TaskListComponent {
       description: task.description,
       categoryId: task.categoryId,
       isCompleted: !task.isCompleted,
-    }
+    };
+
+    this.todoTaskService.update(task.id, updateDto)
+      .pipe(finalize(() => this.trackingTaskId.set(null)))
+      .subscribe({
+        next: () => {
+          this.tasks.update(tasks =>
+            tasks.map(t => (t.id === task.id ? { ...t, isCompleted: updateDto.isCompleted } : t))
+          );
+        },
+        error: (err: unknown) => {
+          this.error.set('Failed to update task status');
+          console.error('Error updating task status', err);
+        }
+      });
   }
+
+  deleteTask(taskId: string) : void {
+    if (!confirm('Are you confirm you want to delete this task?')) return;
+
+    this.trackingTaskId.set(taskId);
+    this.error.set(null);
+
+    this.todoTaskService.delete(taskId)
+      .pipe(finalize(() => this.trackingTaskId.set(null)))
+      .subscribe({
+        next: () => {
+          this.tasks.update(tasks => tasks.filter(t => t.id !== taskId));
+        },
+        error: (err: unknown)=> {
+          this.error.set('Failed to delete task.');
+          console.error('Error deleting task', err);
+        }
+      });
+  }
+}
 
