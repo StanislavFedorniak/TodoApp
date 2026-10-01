@@ -72,47 +72,119 @@
       @for (task of tasks(); track task.id) {
         <div class="col-12">
           <div class="card h-100" [class.border-success]="task.isCompleted">
-            <div class="card-body d-flex align-items-center justify-content-between">
-              <!-- Checkbox & Info -->
-              <div class="d-flex align-items-center gap-3 w-100">
-                <div class="form-check form-switch fs-4 mb-0">
-                  <input
-                    class="form-check-input mt-0"
-                    type="checkbox"
-                    role="switch"
-                    [id]="'check-' + task.id"
-                    [checked]="task.isCompleted"
-                    [disabled]="trackingTaskId() === task.id"
-                    (change)="toggleStatus(task)">
-                </div>
+            <!-- Змінено d-flex layout на гнучкіший flex-column -->
+            <div class="card-body d-flex flex-column gap-3">
 
-                <div class="ms-2">
-                  <h5 class="card-title mb-1" [class.text-decoration-line-through]="task.isCompleted" [class.text-muted]="task.isCompleted">
-                    {{ task.title }}
-                  </h5>
-                  <p class="card-text mb-0 text-muted small">
-                    @if (task.categoryId) {
-                      <span class="badge bg-secondary me-2">Category ID: {{ task.categoryId }}</span>
-                    }
-                    {{ task.description }}
-                  </p>
-                </div>
-              </div>
+              <!-- ДОДАНО: Перевірка режиму редагування. Якщо editingTaskId рівний поточному id, показуємо форму -->
+              @if (editingTaskId() === task.id) {
+                <form [formGroup]="editForm" (ngSubmit)="saveEdit(task)" class="w-100">
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <!-- ДОДАНО: Інпут для редагування заголовка -->
+                      <input
+                        type="text"
+                        class="form-control"
+                        formControlName="title"
+                        placeholder="Task title">
+                    </div>
 
-              <!-- Actions -->
-              <div class="d-flex gap-2 ms-3">
-                <button
-                  class="btn btn-outline-danger btn-sm"
-                  [disabled]="trackingTaskId() === task.id"
-                  (click)="deleteTask(task.id)"
-                  aria-label="Delete task">
-                  @if (trackingTaskId() === task.id) {
-                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                  } @else {
-                    Delete
-                  }
-                </button>
-              </div>
+                    <div class="col-md-3">
+                      <!-- ДОДАНО: Селект для зміни категорії під час редагування -->
+                      <select class="form-select" formControlName="categoryId">
+                        <option [ngValue]="null">No Category</option>
+                        @for (category of categories(); track category.id) {
+                          <option [value]="category.id">{{ category.name }}</option>
+                        }
+                      </select>
+                    </div>
+
+                    <div class="col-md-3">
+                      <!-- ДОДАНО: Інпут для редагування опису -->
+                      <input
+                        type="text"
+                        class="form-control"
+                        formControlName="description"
+                        placeholder="Description">
+                    </div>
+
+                    <div class="col-md-2 d-flex gap-2">
+                      <!-- ДОДАНО: Кнопка збереження змін. Блокується поки йде запит (trackingTaskId) -->
+                      <button
+                        type="submit"
+                        class="btn btn-success btn-sm w-50"
+                        [disabled]="editForm.invalid || trackingTaskId() === task.id"
+                        aria-label="Save changes">
+                        @if (trackingTaskId() === task.id) {
+                          <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                        } @else {
+                          Save
+                        }
+                      </button>
+                      <!-- ДОДАНО: Кнопка скасування редагування -->
+                      <button
+                        type="button"
+                        class="btn btn-secondary btn-sm w-50"
+                        [disabled]="trackingTaskId() === task.id"
+                        (click)="cancelEdit()"
+                        aria-label="Cancel editing">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              } @else {
+                <!-- Звичайний режим (не редагування) -->
+                <div class="d-flex align-items-center justify-content-between w-100">
+                  <div class="d-flex align-items-center gap-3 w-100">
+                    <div class="form-check form-switch fs-4 mb-0">
+                      <input
+                        class="form-check-input mt-0"
+                        type="checkbox"
+                        role="switch"
+                        [id]="'check-' + task.id"
+                        [checked]="task.isCompleted"
+                        [disabled]="trackingTaskId() === task.id"
+                        (change)="toggleStatus(task)">
+                    </div>
+
+                    <div class="ms-2">
+                      <h5 class="card-title mb-1" [class.text-decoration-line-through]="task.isCompleted" [class.text-muted]="task.isCompleted">
+                        {{ task.title }}
+                      </h5>
+                      <p class="card-text mb-0 text-muted small">
+                        @if (task.categoryId) {
+                          <span class="badge bg-secondary me-2">Category ID: {{ task.categoryId }}</span>
+                        }
+                        {{ task.description }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="d-flex gap-2 ms-3">
+                    <!-- ДОДАНО: Кнопка "Edit", яка викликає startEdit() -->
+                    <button
+                      class="btn btn-outline-primary btn-sm"
+                      [disabled]="trackingTaskId() === task.id"
+                      (click)="startEdit(task)"
+                      aria-label="Edit task">
+                      Edit
+                    </button>
+                    <!-- Кнопка "Видалити" -->
+                    <button
+                      class="btn btn-outline-danger btn-sm"
+                      [disabled]="trackingTaskId() === task.id"
+                      (click)="deleteTask(task.id)"
+                      aria-label="Delete task">
+                      @if (trackingTaskId() === task.id) {
+                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                      } @else {
+                        Delete
+                      }
+                    </button>
+                  </div>
+                </div>
+              }
             </div>
           </div>
         </div>

@@ -22,8 +22,15 @@ export class TaskListComponent {
   readonly error = signal<string | null>(null);
   readonly isSubmitting = signal<boolean>(false);
   readonly trackingTaskId = signal<string | null>(null);
+  readonly editingTaskId = signal<string | null>(null);
 
   readonly taskForm = new FormGroup({
+    title: new FormControl('', { nonNullable: true, validators: [Validators.required]}),
+    description: new FormControl<string | null>(null),
+    categoryId: new FormControl<string | null>(null)
+  });
+
+  readonly editForm = new FormGroup({
     title: new FormControl('', { nonNullable: true, validators: [Validators.required]}),
     description: new FormControl<string | null>(null),
     categoryId: new FormControl<string | null>(null)
@@ -38,6 +45,7 @@ export class TaskListComponent {
     this.error.set(null);
 
     this.categoryService.getAll().subscribe({
+      // TODO. forkJoin
       next: (cats) => this.categories.set(cats),
       error: (err: unknown) => console.error('Failed to load categories', err)
     })
@@ -106,6 +114,50 @@ export class TaskListComponent {
           console.error('Error updating task status', err);
         }
       });
+  }
+
+  startEdit(task: TodoTask): void {
+    this.editingTaskId.set(task.id);
+    this.editForm.setValue({
+      title: task.title,
+      description: task.description || null,
+      categoryId: task.categoryId || null
+    });
+  }
+
+  cancelEdit(): void {
+    this.editingTaskId.set(null);
+    this.editForm.reset();
+  }
+
+  saveEdit(task: TodoTask): void {
+    if (this.editForm.invalid) return;
+
+    this.trackingTaskId.set(task.id);
+    this.error.set(null);
+
+    const formValue = this.editForm.getRawValue();
+    const updateDto: TodoTaskUpdateDto = {
+      title: formValue.title,
+      description: formValue.description || undefined,
+      isCompleted: task.isCompleted,
+      categoryId: formValue.categoryId || undefined
+    };
+
+    this.todoTaskService.update(task.id, updateDto)
+      .pipe(finalize(() => this.trackingTaskId.set(null)))
+      .subscribe({
+        next: () => {
+          this.tasks.update(tasks =>
+            tasks.map(t => (t.id === task.id ? {...t, ...updateDto} : t))
+          );
+          this.cancelEdit();
+        },
+        error: (err: unknown) => {
+          this.error.set('Failed to update task');
+          console.error('Error updating task', err);
+        }
+      })
   }
 
   deleteTask(taskId: string) : void {
