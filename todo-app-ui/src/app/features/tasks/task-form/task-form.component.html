@@ -1,0 +1,55 @@
+@if (error()) {
+  <div class="alert alert-danger" role="alert">
+    {{ error() }}
+  </div>
+}
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form [formGroup]="taskForm" (ngSubmit)="addTask()">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label for="taskTitle" class="form-label">Title <span class="text-danger">*</span></label>
+          <input
+            type="text"
+            id="taskTitle"
+            class="form-control"
+            formControlName="title"
+            placeholder="What needs to be done?">
+        </div>
+
+        <div class="col-md-3">
+          <label for="taskCategory" class="form-label">Category</label>
+          <select id="taskCategory" class="form-select" formControlName="categoryId">
+            <option [ngValue]="null">No Category</option>
+            @for (category of categories(); track category.id) {
+              <option [value]="category.id">{{ category.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label for="taskDescription" class="form-label">Description (Optional)</label>
+          <input
+            type="text"
+            id="taskDescription"
+            class="form-control"
+            formControlName="description"
+            placeholder="Additional details">
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+          <button
+            type="submit"
+            class="btn btn-primary w-100"
+            [disabled]="taskForm.invalid || isSubmitting()">
+            @if (isSubmitting()) {
+              <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+            }
+            Add Task
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

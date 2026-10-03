@@ -1,15 +1,16 @@
-﻿import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+﻿import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {Component, computed, inject, OnInit, signal} from '@angular/core';
 import {TodoTaskService} from '../../../core/services/todo-task.service';
-import {TodoTask, TodoTaskCreateDto, TodoTaskUpdateDto} from '../../../core/models/task.model';
+import {TodoTask, TodoTaskUpdateDto} from '../../../core/models/task.model';
 import {Category} from '../../../core/models/category.model';
 import {CategoryService} from '../../../core/services/category.service';
 import {finalize, forkJoin} from 'rxjs';
+import {TaskFormComponent} from '../task-form/task-form.component';
+import {TITLE_VALIDATORS} from '../task-title.validators';
 
-const TITLE_VALIDATORS = [Validators.required, Validators.pattern(/\S/)];
 @Component ({
   selector: 'app-task-list',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TaskFormComponent],
   templateUrl: './task-list.component.html'
 })
 export class TaskListComponent implements OnInit{
@@ -25,15 +26,8 @@ export class TaskListComponent implements OnInit{
 
   readonly loading = signal<boolean>(false);
   readonly error = signal<string | null>(null);
-  readonly isSubmitting = signal<boolean>(false);
   readonly trackingTaskId = signal<string | null>(null);
   readonly editingTaskId = signal<string | null>(null);
-
-  readonly taskForm = new FormGroup({
-    title: new FormControl('', { nonNullable: true, validators: TITLE_VALIDATORS}),
-    description: new FormControl<string | null>(null),
-    categoryId: new FormControl<string | null>(null)
-  });
 
   readonly editForm = new FormGroup({
     title: new FormControl('', { nonNullable: true, validators: TITLE_VALIDATORS}),
@@ -71,31 +65,8 @@ export class TaskListComponent implements OnInit{
      return this.categoryNames().get(categoryId) ?? null;
   }
 
-  addTask(): void {
-    if (this.taskForm.invalid) return;
-
-    this.isSubmitting.set(true);
-    this.error.set(null);
-
-    const formValue = this.taskForm.getRawValue();
-    const newTask: TodoTaskCreateDto = {
-      title: formValue.title.trim(),
-      description: formValue.description?.trim() || null,
-      categoryId: formValue.categoryId
-    };
-
-    this.todoTaskService.create(newTask)
-      .pipe(finalize(() => this.isSubmitting.set(false)))
-      .subscribe({
-        next: (createdTask: TodoTask) => {
-          this.tasks.update(tasks => [...tasks, createdTask]);
-          this.taskForm.reset();
-        },
-        error: (err: unknown) => {
-          this.error.set('Failed to create task.');
-          console.error('Error creating task:', err);
-        }
-      });
+  onTaskCreated(task: TodoTask): void {
+    this.tasks.update(tasks => [...tasks, task]);
   }
 
   toggleStatus(task: TodoTask): void {
