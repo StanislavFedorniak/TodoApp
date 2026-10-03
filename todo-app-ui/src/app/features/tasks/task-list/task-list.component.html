@@ -152,8 +152,9 @@
                         {{ task.title }}
                       </h5>
                       <p class="card-text mb-0 text-muted small">
-                        @if (task.categoryId) {
-                          <span class="badge bg-secondary me-2">Category ID: {{ task.categoryId }}</span>
+                        @let name = categoryName(task.categoryId);
+                        @if (name) {
+                          <span class="badge bg-secondary me-2">{{ name }}</span>
                         }
                         {{ task.description }}
                       </p>
