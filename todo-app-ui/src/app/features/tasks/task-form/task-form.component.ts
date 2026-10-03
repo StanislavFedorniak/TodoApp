@@ -26,6 +26,11 @@ export class TaskFormComponent {
     categoryId: new FormControl<string | null>(null)
   });
 
+  showTitleError(): boolean {
+    const tasks = this.taskForm.controls.title;
+    return tasks.invalid && tasks.touched;
+  }
+
   addTask(): void {
     if (this.taskForm.invalid) return;
 

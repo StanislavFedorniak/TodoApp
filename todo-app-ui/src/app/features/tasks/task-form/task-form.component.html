@@ -15,7 +15,15 @@
             id="taskTitle"
             class="form-control"
             formControlName="title"
-            placeholder="What needs to be done?">
+            placeholder="What needs to be done?"
+            [class.is-invalid]="showTitleError()"
+            [attr.aria-invalid]="showTitleError()">
+            [attr.aria-describedby]="showTitleError() ? taskTitleError : null"
+            @if (showTitleError()) {
+              <div id="taskTitleError" class="invalid-feedback" role="alert">
+                Title is required.
+              </div>
+            }
         </div>
 
         <div class="col-md-3">
