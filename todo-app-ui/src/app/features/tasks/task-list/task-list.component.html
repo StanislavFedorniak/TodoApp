@@ -30,15 +30,18 @@
                 <form [formGroup]="editForm" (ngSubmit)="saveEdit(task)" class="w-100">
                   <div class="row g-3">
                     <div class="col-md-4">
+                      <label [for]="'edit-title-' + task.id" class="visually-hidden">Title</label>
                       <input
                         type="text"
+                        [id]="'edit-title-' + task.id"
                         class="form-control"
                         formControlName="title"
                         placeholder="Task title">
                     </div>
 
                     <div class="col-md-3">
-                      <select class="form-select" formControlName="categoryId">
+                      <label [for]="'edit-category-' + task.id" class="visually-hidden">Category</label>
+                      <select [id]="'edit-category-' + task.id" class="form-select" formControlName="categoryId">
                         <option [ngValue]="null">No Category</option>
                         @for (category of categories(); track category.id) {
                           <option [value]="category.id">{{ category.name }}</option>
@@ -47,8 +50,10 @@
                     </div>
 
                     <div class="col-md-3">
+                      <label [for]="'edit-description-' + task.id" class="visually-hidden">Description</label>
                       <input
                         type="text"
+                        [id]="'edit-description-' + task.id"
                         class="form-control"
                         formControlName="description"
                         placeholder="Description">
@@ -59,7 +64,7 @@
                         type="submit"
                         class="btn btn-success btn-sm w-50"
                         [disabled]="editForm.invalid || trackingTaskId() === task.id"
-                        aria-label="Save changes">
+                        [attr.aria-label]="'Save changes to ' + task.title">
                         @if (trackingTaskId() === task.id) {
                           <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
                         } @else {
@@ -71,7 +76,7 @@
                         class="btn btn-secondary btn-sm w-50"
                         [disabled]="trackingTaskId() === task.id"
                         (click)="cancelEdit()"
-                        aria-label="Cancel editing">
+                        [attr.aria-label]="'Cancel editing ' + task.title">
                         Cancel
                       </button>
                     </div>
@@ -88,6 +93,7 @@
                         [id]="'check-' + task.id"
                         [checked]="task.isCompleted"
                         [disabled]="trackingTaskId() === task.id"
+                        [attr.aria-label]="'Completed: ' + task.title"
                         (change)="toggleStatus(task)">
                     </div>
 
@@ -110,14 +116,14 @@
                       class="btn btn-outline-primary btn-sm"
                       [disabled]="trackingTaskId() === task.id"
                       (click)="startEdit(task)"
-                      aria-label="Edit task">
+                      [attr.aria-label]="'Edit task ' + task.title">
                       Edit
                     </button>
                     <button
                       class="btn btn-outline-danger btn-sm"
                       [disabled]="trackingTaskId() === task.id"
                       (click)="deleteTask(task.id)"
-                      aria-label="Delete task">
+                      [attr.aria-label]="'Delete task ' + task.title">
                       @if (trackingTaskId() === task.id) {
                         <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
                       } @else {

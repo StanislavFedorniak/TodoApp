@@ -140,7 +140,7 @@ export class TaskListComponent implements OnInit{
   }
 
   deleteTask(taskId: string) : void {
-    if (!confirm('Are you confirm you want to delete this task?')) return;
+    if (!confirm('Delete this task?')) return;
 
     this.trackingTaskId.set(taskId);
     this.error.set(null);
