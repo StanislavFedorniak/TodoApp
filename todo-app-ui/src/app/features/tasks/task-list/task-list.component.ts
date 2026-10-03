@@ -1,22 +1,27 @@
 ﻿import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {Component, inject, signal} from '@angular/core';
+import {Component, computed, inject, OnInit, signal} from '@angular/core';
 import {TodoTaskService} from '../../../core/services/todo-task.service';
 import {TodoTask, TodoTaskCreateDto, TodoTaskUpdateDto} from '../../../core/models/task.model';
 import {Category} from '../../../core/models/category.model';
 import {CategoryService} from '../../../core/services/category.service';
-import {finalize} from 'rxjs';
+import {finalize, forkJoin} from 'rxjs';
 
+const TITLE_VALIDATORS = [Validators.required, Validators.pattern(/\S/)];
 @Component ({
   selector: 'app-task-list',
   imports: [ReactiveFormsModule],
   templateUrl: './task-list.component.html'
 })
-export class TaskListComponent {
+export class TaskListComponent implements OnInit{
   private readonly todoTaskService = inject(TodoTaskService);
   private readonly categoryService = inject(CategoryService);
 
   readonly tasks = signal<TodoTask[]>([]);
   readonly categories = signal<Category[]>([]);
+
+  private readonly categoryNames = computed(
+    () => new Map(this.categories().map(c => [c.id, c.name]))
+  );
 
   readonly loading = signal<boolean>(false);
   readonly error = signal<string | null>(null);
@@ -25,13 +30,13 @@ export class TaskListComponent {
   readonly editingTaskId = signal<string | null>(null);
 
   readonly taskForm = new FormGroup({
-    title: new FormControl('', { nonNullable: true, validators: [Validators.required]}),
+    title: new FormControl('', { nonNullable: true, validators: TITLE_VALIDATORS}),
     description: new FormControl<string | null>(null),
     categoryId: new FormControl<string | null>(null)
   });
 
   readonly editForm = new FormGroup({
-    title: new FormControl('', { nonNullable: true, validators: [Validators.required]}),
+    title: new FormControl('', { nonNullable: true, validators: TITLE_VALIDATORS}),
     description: new FormControl<string | null>(null),
     categoryId: new FormControl<string | null>(null)
   });
@@ -44,23 +49,26 @@ export class TaskListComponent {
     this.loading.set(true);
     this.error.set(null);
 
-    this.categoryService.getAll().subscribe({
-      // TODO. forkJoin
-      next: (cats) => this.categories.set(cats),
-      error: (err: unknown) => console.error('Failed to load categories', err)
+    forkJoin({
+      categories: this.categoryService.getAll(),
+      tasks: this.todoTaskService.getAll()
     })
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: ({ categories, tasks }) => {
+          this.categories.set(categories);
+          this.tasks.set(tasks);
+        },
+        error: (err: unknown) => {
+          this.error.set('Failed to load data.');
+          console.error('Error loading data', err);
+        }
+    })
+  }
 
-    this.todoTaskService.getAll().subscribe({
-      next: (tasks) => {
-        this.tasks.set(tasks);
-        this.loading.set(false);
-      },
-      error: (err: unknown) => {
-        this.error.set('Failed to load tasks.');
-        this.loading.set(false);
-        console.error('Error loading tasks', err);
-      }
-    })
+  categoryName(categoryId: string | null): string | null {
+     if (!categoryId) return null;
+     return this.categoryNames().get(categoryId) ?? null;
   }
 
   addTask(): void {
@@ -71,9 +79,9 @@ export class TaskListComponent {
 
     const formValue = this.taskForm.getRawValue();
     const newTask: TodoTaskCreateDto = {
-      title: formValue.title,
-      description: formValue.description || undefined,
-      categoryId: formValue.categoryId || undefined
+      title: formValue.title.trim(),
+      description: formValue.description?.trim() || null,
+      categoryId: formValue.categoryId
     };
 
     this.todoTaskService.create(newTask)
@@ -138,10 +146,10 @@ export class TaskListComponent {
 
     const formValue = this.editForm.getRawValue();
     const updateDto: TodoTaskUpdateDto = {
-      title: formValue.title,
-      description: formValue.description || undefined,
+      title: formValue.title.trim(),
+      description: formValue.description?.trim() || null,
       isCompleted: task.isCompleted,
-      categoryId: formValue.categoryId || undefined
+      categoryId: formValue.categoryId
     };
 
     this.todoTaskService.update(task.id, updateDto)
