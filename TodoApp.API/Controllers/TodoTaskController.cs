@@ -27,15 +27,9 @@ public class TodoTaskController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<TodoTaskDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        try
-        {
-            var todoTask = await _todoTaskService.GetByIdAsync(id, cancellationToken);
-            return Ok(todoTask);
-        }
-        catch (NotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
+        var todoTask = await _todoTaskService.GetByIdAsync(id, cancellationToken);
+        
+        return Ok(todoTask);
     }
 
     [HttpPost]
@@ -49,28 +43,16 @@ public class TodoTaskController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, TodoTaskUpdateDto request, CancellationToken cancellationToken)
     {
-        try
-        {
-            await _todoTaskService.UpdateAsync(id, request, cancellationToken);
-            return NoContent();
-        }
-        catch (NotFoundException e) // Changed from Exception e to NotFoundException e
-        {
-            return NotFound(e.Message);
-        }
+        await _todoTaskService.UpdateAsync(id, request, cancellationToken);
+        
+        return NoContent();
     }
     
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        try
-        {
-            await _todoTaskService.DeleteAsync(id, cancellationToken);
-            return NoContent();
-        }
-        catch (NotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
+        await _todoTaskService.DeleteAsync(id, cancellationToken);
+        
+        return NoContent();
     }
 }

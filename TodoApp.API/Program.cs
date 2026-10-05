@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TodoApp.API.ExceptionHandling;
 using TodoApp.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,6 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Замінюємо AddOpenApi() на AddSwaggerGen()
 builder.Services.AddSwaggerGen(); 
 builder.Services.AddControllers();
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 // Налаштування CORS
 builder.Services.AddCors(options =>
@@ -26,6 +30,8 @@ builder.Services.AddScoped<TodoApp.Core.Interfaces.ICategoryService, TodoApp.Ser
 builder.Services.AddScoped<TodoApp.Core.Interfaces.ITodoTaskService, TodoApp.Services.TodoTaskService>();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {

@@ -27,15 +27,9 @@ public class CategoryController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<CategoryDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        try
-        {
-            var category = await _categoryService.GetByIdAsync(id, cancellationToken);
-            return Ok(category);
-        }
-        catch (NotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
+        var category = await _categoryService.GetByIdAsync(id, cancellationToken);
+        
+        return Ok(category);
     }
 
     [HttpPost]
@@ -49,28 +43,16 @@ public class CategoryController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, CategoryUpdateDto request, CancellationToken cancellationToken)
     {
-        try
-        {
-            await _categoryService.UpdateAsync(id, request, cancellationToken);
-            return NoContent();
-        }
-        catch (NotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
+        await _categoryService.UpdateAsync(id, request, cancellationToken);
+        
+        return NoContent();
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        try
-        {
-            await _categoryService.DeleteAsync(id, cancellationToken);
-            return NoContent();
-        }
-        catch (NotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
+        await _categoryService.DeleteAsync(id, cancellationToken);
+        
+        return NoContent();
     }
 }
