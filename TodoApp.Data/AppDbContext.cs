@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
 
     public DbSet<TodoTask> Tasks { get; set; }
     public DbSet<Category> Categories { get; set; }
+    public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +34,19 @@ public class AppDbContext : DbContext
                 .WithMany(c => c.Tasks)
                 .HasForeignKey(e => e.CategoryId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.Property(e => e.Email)
+                .IsRequired()
+                .HasMaxLength(256);
+
+            entity.HasIndex(e => e.Email)
+                .IsUnique();
+
+            entity.Property(e => e.PasswordHash)
+                .IsRequired();
         });
     }
 }
