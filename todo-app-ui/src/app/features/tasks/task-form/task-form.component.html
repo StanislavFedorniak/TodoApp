@@ -17,12 +17,12 @@
             formControlName="title"
             placeholder="What needs to be done?"
             [class.is-invalid]="showTitleError()"
-            [attr.aria-invalid]="showTitleError()">
-            [attr.aria-describedby]="showTitleError() ? taskTitleError : null"
-            @if (showTitleError()) {
-              <div id="taskTitleError" class="invalid-feedback" role="alert">
-                Title is required.
-              </div>
+            [attr.aria-invalid]="showTitleError()"
+            [attr.aria-describedby]="showTitleError() ? 'taskTitleError' : null">
+          @if (showTitleError()) {
+            <div id="taskTitleError" class="invalid-feedback" role="alert">
+              Title is required.
+            </div>
             }
         </div>
 
