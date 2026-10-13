@@ -10,15 +10,18 @@ namespace TodoApp.Services;
 public class TodoTaskService : ITodoTaskService
 {
     private readonly AppDbContext _context;
+    private readonly Guid _userId;
 
-    public TodoTaskService(AppDbContext context)
+    public TodoTaskService(AppDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
+        _userId = currentUser.UserId;
     }
 
     public async Task<IEnumerable<TodoTaskDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var todoTasks = await _context.Tasks
+            .Where(t => t.UserId == _userId)
             .OrderByDescending(t => t.Id)
             .Select(t => new TodoTaskDto(t.Id, t.Title, t.Description, t.IsCompleted, t.CategoryId))
             .ToListAsync(cancellationToken);
@@ -29,7 +32,7 @@ public class TodoTaskService : ITodoTaskService
     public async Task<TodoTaskDto> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var todoTask = await _context.Tasks
-            .Where(t => t.Id == id)
+            .Where(t => t.Id == id && t.UserId == _userId)
             .Select(t => new TodoTaskDto(t.Id, t.Title, t.Description, t.IsCompleted, t.CategoryId))
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -43,7 +46,10 @@ public class TodoTaskService : ITodoTaskService
 
     public async Task<TodoTaskDto> CreateAsync(TodoTaskCreateDto request, CancellationToken cancellationToken = default)
     {
+        await EnsureCategoryBelongsToUserAsync(request.CategoryId, cancellationToken);
+
         var todoTask = request.ToEntity();
+        todoTask.UserId = _userId;
 
         _context.Tasks.Add(todoTask);
         await _context.SaveChangesAsync(cancellationToken);
@@ -53,12 +59,15 @@ public class TodoTaskService : ITodoTaskService
 
     public async Task UpdateAsync(Guid id, TodoTaskUpdateDto request, CancellationToken cancellationToken = default)
     {
-        var todoTask = await _context.Tasks.FindAsync([id], cancellationToken);
+        var todoTask = await _context.Tasks
+            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == _userId, cancellationToken);
 
         if (todoTask is null)
         {
             throw new NotFoundException($"Task {id} was not found");
         }
+
+        await EnsureCategoryBelongsToUserAsync(request.CategoryId, cancellationToken);
 
         request.MapTo(todoTask);
 
@@ -67,7 +76,8 @@ public class TodoTaskService : ITodoTaskService
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var todoTask = await _context.Tasks.FindAsync([id], cancellationToken);
+        var todoTask = await _context.Tasks
+            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == _userId, cancellationToken);
 
         if (todoTask is null)
         {
@@ -77,5 +87,21 @@ public class TodoTaskService : ITodoTaskService
         _context.Tasks.Remove(todoTask);
 
         await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task EnsureCategoryBelongsToUserAsync(Guid? categoryId, CancellationToken cancellationToken)
+    {
+        if (categoryId is null)
+        {
+            return;
+        }
+
+        var exists = await _context.Categories
+            .AnyAsync(c => c.Id == categoryId && c.UserId == _userId, cancellationToken);
+
+        if (!exists)
+        {
+            throw new NotFoundException($"Category {categoryId} was not found");
+        }
     }
 }
