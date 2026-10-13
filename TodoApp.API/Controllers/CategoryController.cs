@@ -2,10 +2,12 @@
 using TodoApp.Core.DTOs;
 using TodoApp.Core.Interfaces;
 using TodoApp.Core.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TodoApp.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class CategoryController : ControllerBase
 {

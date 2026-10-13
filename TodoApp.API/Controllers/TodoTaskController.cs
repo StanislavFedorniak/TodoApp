@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TodoApp.Core.DTOs;
 using TodoApp.Core.Exceptions;
 using TodoApp.Core.Interfaces;
@@ -6,6 +7,7 @@ using TodoApp.Core.Interfaces;
 namespace TodoApp.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class TodoTaskController : ControllerBase
 {
