@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoApp.Core.Interfaces;
+using TodoApp.Core.DTOs;
 
 namespace TodoApp.API.Controllers;
 
@@ -16,10 +17,10 @@ public class AccountController : ControllerBase
         _accountService = accountService;
     }
 
-    [HttpDelete]
-    public async Task<ActionResult> DeleteAsync(CancellationToken cancellationToken)
+    [HttpPost("delete")]
+    public async Task<ActionResult> DeleteAsync(AccountDeleteDto request, CancellationToken cancellationToken)
     {
-        await _accountService.DeleteAsync(cancellationToken);
+        await _accountService.DeleteAsync(request, cancellationToken);
 
         return NoContent();
     }
