@@ -35,6 +35,9 @@ public class AppDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(200);
 
+            entity.Property(e => e.Description)
+                .HasMaxLength(2000);
+
             entity.HasOne(e => e.Category)
                 .WithMany(c => c.Tasks)
                 .HasForeignKey(e => e.CategoryId)
