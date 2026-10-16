@@ -13,7 +13,6 @@ using System.Text;
 using Microsoft.OpenApi;
 using TodoApp.API.Services;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSwaggerGen(options =>
@@ -108,3 +107,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
