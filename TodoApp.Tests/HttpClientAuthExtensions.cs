@@ -1,11 +1,10 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Mvc;
 using TodoApp.Core.DTOs;
 
 namespace TodoApp.Tests;
 
-public static class HttpClientAuthExtentions
+public static class HttpClientAuthExtensions
 {
     public const string DefaultPassword = "Passw0rd!123";
 
