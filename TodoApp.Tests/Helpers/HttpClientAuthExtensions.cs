@@ -2,7 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using TodoApp.Core.DTOs;
 
-namespace TodoApp.Tests;
+namespace TodoApp.Tests.Helpers;
 
 public static class HttpClientAuthExtensions
 {

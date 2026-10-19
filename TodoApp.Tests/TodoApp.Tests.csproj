@@ -16,6 +16,7 @@
 
     <ItemGroup>
         <Using Include="Xunit" />
+        <Using Include="TodoApp.Tests.Helpers" />
     </ItemGroup>
 
     <ItemGroup>

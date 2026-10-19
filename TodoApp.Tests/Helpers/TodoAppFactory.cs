@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TodoApp.Data;
 
-namespace TodoApp.Tests;
+namespace TodoApp.Tests.Helpers;
 
 public class TodoAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
