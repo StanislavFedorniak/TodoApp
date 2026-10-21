@@ -1,5 +1,7 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using TodoApp.Core.DTOs;
 
 namespace TodoApp.Tests;
 
@@ -27,6 +29,33 @@ public class AccountEndpointsTests : IClassFixture<TodoAppFactory>
     [Fact]
     public async Task Delete_WithWrongPassword_ReturnsForbiddenAndKeepsAccount()
     {
-        
+        var client = await _factory.CreateAuthenticatedClientAsync();
+        var task = await client.CreateTaskAsync();
+
+        var response = await client.PostAsJsonAsync(Url, new AccountDeleteDto("WrongPassword"));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+
+        var stillThere = await client.GetAsync($"/api/todotask/{task.Id}");
+        Assert.Equal(HttpStatusCode.OK, stillThere.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_WithCorrectPassword_ReturnsNoContentAndBlocksLogin()
+    {
+        var client = _factory.CreateClient();
+        var email = HttpClientAuthExtensions.NewEmail();
+        var auth = await client.RegisterAsync(email);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
+        var category = await client.CreateCategoryAsync();
+        await client.CreateTaskAsync(categoryId: category.Id);
+
+        var delete = await client.PostAsJsonAsync(
+            Url, new AccountDeleteDto(HttpClientAuthExtensions.DefaultPassword));
+        var login = await client.PostAsJsonAsync(
+            "/api/auth/login", new LoginDto(email, HttpClientAuthExtensions.DefaultPassword));    
+    
+        Assert.Equal(HttpStatusCode.NoContent, delete.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
     }
 }
