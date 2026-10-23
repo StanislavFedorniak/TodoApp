@@ -19,7 +19,9 @@ public class TodoAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                ["ConnectionStrings:DefaultConnection"] = ConnectionString,
-               ["Jwt:Key"] = "integration-tests-only-signing-key-32+chars"
+               ["Jwt:Key"] = "integration-tests-only-signing-key-32+chars",
+               ["RateLimiting:LoginPermitLimit"] = "1000",
+               ["RateLimiting:AccountDeletePermitLimit"] = "1000"
             });
         });
     }
