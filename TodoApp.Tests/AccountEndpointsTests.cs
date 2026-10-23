@@ -29,15 +29,17 @@ public class AccountEndpointsTests : IClassFixture<TodoAppFactory>
     [Fact]
     public async Task Delete_WithWrongPassword_ReturnsForbiddenAndKeepsAccount()
     {
-        var client = await _factory.CreateAuthenticatedClientAsync();
-        var task = await client.CreateTaskAsync();
+        var client = _factory.CreateClient();
+        var email = HttpClientAuthExtensions.NewEmail();
+        var auth = await client.RegisterAsync(email);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
 
         var response = await client.PostAsJsonAsync(Url, new AccountDeleteDto("WrongPassword"));
+        var login = await client.PostAsJsonAsync(
+            "/api/auth/login", new LoginDto(email, HttpClientAuthExtensions.DefaultPassword));
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-
-        var stillThere = await client.GetAsync($"/api/todotask/{task.Id}");
-        Assert.Equal(HttpStatusCode.OK, stillThere.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
     }
 
     [Fact]
@@ -53,7 +55,7 @@ public class AccountEndpointsTests : IClassFixture<TodoAppFactory>
         var delete = await client.PostAsJsonAsync(
             Url, new AccountDeleteDto(HttpClientAuthExtensions.DefaultPassword));
         var login = await client.PostAsJsonAsync(
-            "/api/auth/login", new LoginDto(email, HttpClientAuthExtensions.DefaultPassword));    
+            "/api/auth/login", new LoginDto(email, HttpClientAuthExtensions.DefaultPassword));
     
         Assert.Equal(HttpStatusCode.NoContent, delete.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
