@@ -1,6 +1,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TodoApp.Core.DTOs;
 using TodoApp.Core.Interfaces;
 
@@ -26,6 +27,7 @@ public class AuthController : ControllerBase
         return StatusCode(StatusCodes.Status201Created, response);
     }
 
+    [EnableRateLimiting(RateLimitPolicies.Login)]
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponseDto>> Login(LoginDto request, CancellationToken cancellationToken)
     {

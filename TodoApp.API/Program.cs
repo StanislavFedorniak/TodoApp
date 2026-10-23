@@ -1,17 +1,21 @@
+using System.Text;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using TodoApp.API;
 using TodoApp.API.ExceptionHandling;
+using TodoApp.API.Options;
+using TodoApp.API.Services;
+using TodoApp.Core.Entities;
 using TodoApp.Core.Interfaces;
 using TodoApp.Data;
 using TodoApp.Services;
 using TodoApp.Services.Options;
-using TodoApp.Core.Entities;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.OpenApi;
-using TodoApp.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +26,7 @@ builder.Services.AddSwaggerGen(options =>
         Type = SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT",
-        Description = "Встав JWT-токен без префікса 'Bearer '."
+        Description = "Paste the JWT token without the 'Bearer ' prefix."
     });
 
     options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
@@ -56,6 +60,10 @@ builder.Services.AddOptions<JwtSettings>()
     .BindConfiguration(JwtSettings.SectionName)
     .ValidateDataAnnotations()
     .ValidateOnStart();
+builder.Services.AddOptions<RateLimitSettings>()
+    .BindConfiguration(RateLimitSettings.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
@@ -86,6 +94,62 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
         };
     });
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy(RateLimitPolicies.Login, httpContext =>
+    {
+        var settings = httpContext.RequestServices
+            .GetRequiredService<IOptions<RateLimitSettings>>().Value;
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = settings.LoginPermitLimit,
+                Window = TimeSpan.FromSeconds(settings.LoginWindowSeconds)
+            });
+    });
+
+    options.AddPolicy(RateLimitPolicies.AccountDelete, httpContext =>
+    {
+        var settings = httpContext.RequestServices
+            .GetRequiredService<IOptions<RateLimitSettings>>().Value;
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.User.FindFirst("sub")?.Value
+                ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = settings.AccountDeletePermitLimit,
+                Window = TimeSpan.FromSeconds(settings.AccountDeleteWindowSeconds)
+            });
+    });
+
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            context.HttpContext.Response.Headers.RetryAfter =
+                ((int)retryAfter.TotalSeconds).ToString();
+        }
+
+        await context.HttpContext.RequestServices
+            .GetRequiredService<IProblemDetailsService>()
+            .TryWriteAsync(new ProblemDetailsContext
+            {
+                HttpContext = context.HttpContext,
+                ProblemDetails =
+                {
+                    Status = StatusCodes.Status429TooManyRequests,
+                    Title = "Too many requests. Try again later."
+                }
+            });
+    };
+});
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
@@ -103,6 +167,7 @@ app.UseRouting();
 app.UseCors("AllowAngularDev");
 
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
 

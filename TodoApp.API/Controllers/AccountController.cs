@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TodoApp.Core.Interfaces;
+using Microsoft.AspNetCore.RateLimiting;
 using TodoApp.Core.DTOs;
+using TodoApp.Core.Interfaces;
 
 namespace TodoApp.API.Controllers;
 
@@ -17,6 +18,7 @@ public class AccountController : ControllerBase
         _accountService = accountService;
     }
 
+    [EnableRateLimiting(RateLimitPolicies.AccountDelete)]
     [HttpPost("delete")]
     public async Task<ActionResult> DeleteAsync(AccountDeleteDto request, CancellationToken cancellationToken)
     {
