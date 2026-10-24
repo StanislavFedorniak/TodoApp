@@ -2,7 +2,7 @@
 
 A full-stack task manager inspired by the UX of Microsoft To Do. It pairs a layered **ASP.NET Core Web API** with an **Angular** single-page client, and is built as a deliberate exercise in clean architecture, modern Angular (signals, standalone components) and accessibility.
 
-> **Status:** active development. Core CRUD for tasks and categories works end to end; navigation, filtering and a details panel are on the roadmap below.
+> **Status:** active development. Core CRUD for tasks and categories works end to end, and the API is protected by JWT authentication with per-user data isolation. The Angular client does not have login yet, so it cannot call the protected endpoints; navigation, filtering and a details panel are on the roadmap below.
 
 ## Features
 
@@ -12,6 +12,8 @@ A full-stack task manager inspired by the UX of Microsoft To Do. It pairs a laye
 - Delete confirmation and visible error states for failed requests
 - Accessible UI: labelled form fields, descriptive `aria-label`s, `aria-live` error messages
 - Swagger UI for exploring the API
+- JWT authentication (register, login, account deletion) with per-user data isolation
+- Rate limiting on login and account deletion against password brute-forcing
 
 ## Tech stack
 
@@ -28,7 +30,7 @@ A full-stack task manager inspired by the UX of Microsoft To Do. It pairs a laye
 
 ```
 TodoApp.API        Thin controllers: HTTP in, DTOs out, status codes only
-TodoApp.Services   Business logic (CategoryService, TodoTaskService)
+TodoApp.Services   Business logic (CategoryService, TodoTaskService, AuthService, AccountService)
 TodoApp.Core       Entities, DTO records, service interfaces, exceptions, mapping extensions
 TodoApp.Data       AppDbContext, entity configuration, migrations
 ```
@@ -60,8 +62,13 @@ todo-app-ui/src/app
 
 Base URL: `http://localhost:5293/api`
 
+All endpoints except `/Auth/*` require a JWT in the `Authorization: Bearer <token>` header; without it they return `401`. See [Authentication](#authentication).
+
 | Method | Endpoint | Description |
 |---|---|---|
+| POST | `/Auth/register` | Create an account, returns a token |
+| POST | `/Auth/login` | Sign in, returns a token (rate limited) |
+| POST | `/Account/delete` | Delete the account and all its data; requires the password (rate limited) |
 | GET | `/Category` | List categories |
 | GET | `/Category/{id}` | Get a category |
 | POST | `/Category` | Create a category |
@@ -74,6 +81,46 @@ Base URL: `http://localhost:5293/api`
 | DELETE | `/TodoTask/{id}` | Delete a task |
 
 Interactive documentation is available at `/swagger` when running in Development.
+
+## Authentication
+
+The API issues short-lived JWT access tokens (no refresh tokens yet). Passwords are hashed with ASP.NET Core's `PasswordHasher`. Every category and task belongs to a user: another user's record is never visible and responds with `404`, not `403`, so its existence is not revealed.
+
+### Signing key
+
+The signing key is a secret and must never be committed. `appsettings.json` only holds `Issuer`, `Audience` and `ExpirationMinutes`; set the key (at least 32 characters) locally with user-secrets:
+
+```bash
+dotnet user-secrets set "Jwt:Key" "<at least 32 random characters>" --project TodoApp.API
+```
+
+On a server use the environment variable `Jwt__Key`. The app refuses to start if the key is missing or too short.
+
+### Example requests
+
+```bash
+# register (or POST /api/auth/login with the same body)
+curl -X POST http://localhost:5293/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"me@example.com","password":"Passw0rd!123"}'
+# -> {"token":"<jwt>","expiresAt":"..."}
+
+# call a protected endpoint with the token
+curl http://localhost:5293/api/category -H "Authorization: Bearer <jwt>"
+
+# delete the account (wrong password -> 403)
+curl -X POST http://localhost:5293/api/account/delete \
+  -H "Authorization: Bearer <jwt>" -H "Content-Type: application/json" \
+  -d '{"password":"Passw0rd!123"}'
+```
+
+In Swagger UI use **Authorize** and paste the token without the `Bearer` prefix.
+
+### Rate limiting
+
+Login (per client IP) and account deletion (per user) use fixed-window limits, `5` and `3` requests per `60` seconds by default. Exceeding them returns `429 Too Many Requests` with a `Retry-After` header. Limits are configured in the `RateLimiting` section of `appsettings.json` (`LoginPermitLimit`, `LoginWindowSeconds`, `AccountDeletePermitLimit`, `AccountDeleteWindowSeconds`).
+
+> **Behind a reverse proxy:** the login limit is keyed by the connection's remote IP. Behind nginx, IIS or a load balancer every request appears to come from the proxy, so all users would share one limit. Before deploying behind a proxy, enable `UseForwardedHeaders` and trust `X-Forwarded-For` only from your own proxies (`KnownProxies` / `KnownNetworks`). Trusting it from everyone lets a client spoof the header and bypass the limit.
 
 ## Getting started
 
@@ -94,7 +141,7 @@ dotnet ef database update --project TodoApp.Data --startup-project TodoApp.API
 dotnet run --project TodoApp.API --launch-profile http
 ```
 
-The connection string lives in `TodoApp.API/appsettings.json` (`DefaultConnection`). CORS allows the Angular dev server at `http://localhost:4200`.
+The connection string lives in `TodoApp.API/appsettings.json` (`DefaultConnection`). CORS allows the Angular dev server at `http://localhost:4200`. Set the JWT signing key before the first run, see [Signing key](#signing-key).
 
 ### 2. Run the client
 
@@ -106,12 +153,15 @@ npm start
 
 Open `http://localhost:4200`. The API base URL is configured in `todo-app-ui/src/app/app.config.ts`.
 
-### Build
+### Build and test
 
 ```bash
 dotnet build TodoApp.sln
+dotnet test TodoApp.sln
 cd todo-app-ui && npm run build
 ```
+
+The backend integration tests run against a real LocalDB database `TodoAppDb_Tests` with the same migrations as production, so they need SQL Server LocalDB.
 
 ## Roadmap
 
@@ -121,7 +171,7 @@ cd todo-app-ui && npm run build
 - [ ] Toast notifications and an HTTP error interceptor
 - [ ] Task details panel with managed focus
 - [ ] Unit tests and automated accessibility (AXE) checks
-- [ ] Authentication
+- [ ] Authentication in the client (login and register pages, token interceptor, route guard); the API side is done
 - [ ] Importance flag, due dates and smart lists (requires backend changes)
 
 ## Project structure
@@ -132,6 +182,7 @@ cd todo-app-ui && npm run build
 ├── TodoApp.Services/   Business logic
 ├── TodoApp.Core/       Domain model and contracts
 ├── TodoApp.Data/       EF Core context and migrations
+├── TodoApp.Tests/      Integration tests (xUnit, WebApplicationFactory)
 ├── TodoApp.sln
 └── todo-app-ui/        Angular client
 ```
