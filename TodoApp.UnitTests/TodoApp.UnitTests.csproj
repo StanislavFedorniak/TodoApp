@@ -20,6 +20,8 @@
     <ItemGroup>
         <ProjectReference Include="..\TodoApp.Core\TodoApp.Core.csproj" />
         <ProjectReference Include="..\TodoApp.Services\TodoApp.Services.csproj" />
+        <ProjectReference Include="..\TodoApp.API\TodoApp.API.csproj" />
     </ItemGroup>
+
 
 </Project>
