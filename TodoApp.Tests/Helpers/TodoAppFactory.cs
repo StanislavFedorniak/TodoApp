@@ -9,8 +9,9 @@ namespace TodoApp.Tests.Helpers;
 
 public class TodoAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private const string ConnectionString =
-        "Server=(localdb)\\mssqllocaldb;Database=TodoAppDb_Tests;Trusted_Connection=True;MultipleActiveResultSets=true";
+    private static readonly string ConnectionString =
+        Environment.GetEnvironmentVariable("TODOAPP_TESTS_CONNECTION")
+        ?? "Server=(localdb)\\mssqllocaldb;Database=TodoAppDb_Tests;Trusted_Connection=True;MultipleActiveResultSets=true";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
