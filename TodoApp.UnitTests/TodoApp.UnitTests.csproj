@@ -15,7 +15,9 @@
 
     <ItemGroup>
         <Using Include="Xunit" />
+        <Using Include="TodoApp.UnitTests.Helpers" />
     </ItemGroup>
+
 
     <ItemGroup>
         <ProjectReference Include="..\TodoApp.Core\TodoApp.Core.csproj" />

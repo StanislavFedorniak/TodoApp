@@ -1,18 +1,9 @@
-using System.ComponentModel.DataAnnotations;
 using TodoApp.Services.Options;
 
 namespace TodoApp.UnitTests;
 
 public class JwtSettingsValidationTests
 {
-    private static bool IsValid(JwtSettings settings)
-    {
-        var context = new ValidationContext(settings);
-
-        return Validator.TryValidateObject(settings, context,
-            new List<ValidationResult>(), validateAllProperties: true);
-    }
-
     private static JwtSettings CreateSettings(
         string issuer = "todoapp",
         string audience = "todoapp-clients",
@@ -28,7 +19,7 @@ public class JwtSettingsValidationTests
     [Fact]
     public void Validate_WithAllRequiredValues_Passes()
     {
-        Assert.True(IsValid(CreateSettings()));
+        Assert.True(OptionsValidation.IsValid(CreateSettings()));
     }
 
     [Theory]
@@ -38,7 +29,7 @@ public class JwtSettingsValidationTests
     [InlineData(64, true)]
     public void Validate_KeyLength_RequiresAtLeast32Characters(int keyLength, bool expected)
     {
-        Assert.Equal(expected, IsValid(CreateSettings(keyLength: keyLength)));
+        Assert.Equal(expected, OptionsValidation.IsValid(CreateSettings(keyLength: keyLength)));
     }
 
     [Theory]
@@ -46,7 +37,7 @@ public class JwtSettingsValidationTests
     [InlineData("todoapp", "")]
     public void Validate_WithEmptyIssuerOrAudience_Fails(string issuer, string audience)
     {
-        Assert.False(IsValid(CreateSettings(issuer: issuer, audience: audience)));
+        Assert.False(OptionsValidation.IsValid(CreateSettings(issuer: issuer, audience: audience)));
     }
 
     [Theory]
@@ -56,6 +47,6 @@ public class JwtSettingsValidationTests
     [InlineData(1441, false)]
     public void Validate_ExpirationMinutes_MustBeWithinOneDay(int minutes, bool expected)
     {
-        Assert.Equal(expected, IsValid(CreateSettings(expirationMinutes: minutes)));
+        Assert.Equal(expected, OptionsValidation.IsValid(CreateSettings(expirationMinutes: minutes)));
     }
 }
