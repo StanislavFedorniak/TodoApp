@@ -9,8 +9,12 @@ namespace TodoApp.Tests.Helpers;
 
 public class TodoAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private const string ConnectionString =
-        "Server=(localdb)\\mssqllocaldb;Database=TodoAppDb_Tests;Trusted_Connection=True;MultipleActiveResultSets=true";
+    private static readonly SemaphoreSlim MigrationLock = new(1,1);
+    private static bool _migrated;
+
+    private static readonly string ConnectionString =
+        Environment.GetEnvironmentVariable("TODOAPP_TESTS_CONNECTION")
+        ?? "Server=(localdb)\\mssqllocaldb;Database=TodoAppDb_Tests;Trusted_Connection=True;MultipleActiveResultSets=true";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -28,10 +32,21 @@ public class TodoAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        using var scope = Services.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await MigrationLock.WaitAsync();
+        try
+        {
+            if (_migrated) return;
 
-        await context.Database.MigrateAsync();
+            using var scope = Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            await context.Database.MigrateAsync();
+            _migrated = true;
+        }
+        finally
+        {
+            MigrationLock.Release();
+        }
     }
 
     Task IAsyncLifetime.DisposeAsync() => Task.CompletedTask;
