@@ -1,5 +1,7 @@
 # TodoApp
 
+[![CI](https://github.com/StanislavFedorniak/TodoApp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StanislavFedorniak/TodoApp/actions/workflows/ci.yml)
+
 A full-stack task manager inspired by the UX of Microsoft To Do. It pairs a layered **ASP.NET Core Web API** with an **Angular** single-page client, and is built as a deliberate exercise in clean architecture, modern Angular (signals, standalone components) and accessibility.
 
 > **Status:** active development. Core CRUD for tasks and categories works end to end, and the API is protected by JWT authentication with per-user data isolation. The Angular client does not have login yet, so it cannot call the protected endpoints; navigation, filtering and a details panel are on the roadmap below.
