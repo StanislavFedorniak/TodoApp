@@ -12,3 +12,8 @@ public record TodoTaskUpdateDto(
     [MaxLength(2000)] string? Description,
     bool IsCompleted,
     Guid? CategoryId);
+
+public record TodoTaskFilterDto(
+    Guid? CategoryId = null,
+    bool? IsCompleted = null,
+    [MaxLength(200)] string? Search = null);

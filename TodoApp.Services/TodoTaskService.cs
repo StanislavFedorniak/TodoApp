@@ -18,10 +18,27 @@ public class TodoTaskService : ITodoTaskService
         _userId = currentUser.UserId;
     }
 
-    public async Task<IEnumerable<TodoTaskDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<TodoTaskDto>> GetAllAsync(TodoTaskFilterDto filter, CancellationToken cancellationToken = default)
     {
-        var todoTasks = await _context.Tasks
-            .Where(t => t.UserId == _userId)
+        var query = _context.Tasks.Where(t => t.UserId == _userId);
+
+        if (filter.CategoryId is { } categoryId)
+        {
+            query = query.Where(t => t.CategoryId == categoryId);
+        }
+
+        if (filter.IsCompleted is { } isCompleted)
+        {
+            query = query.Where(t => t.IsCompleted == isCompleted);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var search = filter.Search.Trim();
+            query = query.Where(t => t.Title.Contains(search));
+        }
+
+        var todoTasks = await query
             .OrderByDescending(t => t.Id)
             .Select(t => new TodoTaskDto(t.Id, t.Title, t.Description, t.IsCompleted, t.CategoryId))
             .ToListAsync(cancellationToken);

@@ -76,7 +76,7 @@ All endpoints except `/Auth/*` require a JWT in the `Authorization: Bearer <toke
 | POST | `/Category` | Create a category |
 | PUT | `/Category/{id}` | Update a category |
 | DELETE | `/Category/{id}` | Delete a category |
-| GET | `/TodoTask` | List tasks |
+| GET | `/TodoTask` | List tasks; optional filters `categoryId`, `isCompleted`, `search` (title substring, up to 200 characters) |
 | GET | `/TodoTask/{id}` | Get a task |
 | POST | `/TodoTask` | Create a task |
 | PUT | `/TodoTask/{id}` | Update a task |

@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoApp.Core.DTOs;
-using TodoApp.Core.Exceptions;
 using TodoApp.Core.Interfaces;
 
 namespace TodoApp.API.Controllers;
@@ -19,9 +18,9 @@ public class TodoTaskController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TodoTaskDto>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<IEnumerable<TodoTaskDto>>> GetAll([FromQuery] TodoTaskFilterDto filter, CancellationToken cancellationToken)
     {
-        var todoTasks = await _todoTaskService.GetAllAsync(cancellationToken);
+        var todoTasks = await _todoTaskService.GetAllAsync(filter, cancellationToken);
 
         return Ok(todoTasks);
     }
