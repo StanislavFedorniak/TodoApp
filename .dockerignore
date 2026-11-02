@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/.vs/
+.git/
+.github/
+todo-app-ui/dist/
+todo-app-ui/.angular/
+**/*.user
+Dockerfile
+.env
+.dockerignore
