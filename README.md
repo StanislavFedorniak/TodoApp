@@ -155,6 +155,21 @@ npm start
 
 Open `http://localhost:4200`. The API base URL is configured in `todo-app-ui/src/app/app.config.ts`.
 
+### Run with Docker
+
+Starts the API and SQL Server 2022 together, no LocalDB or .NET SDK needed.
+
+```bash
+cp .env.example .env     # then set MSSQL_SA_PASSWORD and JWT_KEY in .env
+docker compose up --build
+```
+
+The API is available at `http://localhost:5293` (Swagger at `/swagger`, because the compose file runs in `Development`). `.env` is git-ignored and excluded from the image; compose refuses to start if `MSSQL_SA_PASSWORD` or `JWT_KEY` is missing. Avoid `;` and `=` in the SA password: it is embedded in the connection string.
+
+**Migrations.** The compose file sets `Database__MigrateOnStartup=true`, so the API applies pending EF migrations on startup (`Database.MigrateAsync()`), after the `db` healthcheck passes. The flag is off by default, so local runs and integration tests never migrate implicitly (their factory migrates the test database once itself). This is fine for a single instance. With several replicas they would race to migrate, and the API would need DDL rights. For production, apply migrations as a separate step instead (for example `dotnet ef migrations bundle` run before the deploy).
+
+Data lives in the `sqldata` volume: `docker compose down` keeps it, `docker compose down -v` wipes the database.
+
 ### Build and test
 
 ```bash
