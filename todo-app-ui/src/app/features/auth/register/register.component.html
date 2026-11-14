@@ -1,0 +1,56 @@
+<div class="container mt-5" style="max-width: 420px">
+  <h1 class="h3 mb-4">Create account</h1>
+
+  <div aria-live="polite">
+    @if (error()) {
+      <div class="alert alert-danger" role="alert">{{ error() }}</div>
+    }
+  </div>
+
+  <form [formRoot]="registerForm">
+    <div class="mb-3">
+      <label for="registerEmail" class="form-label">Email</label>
+      <input
+        type="email"
+        id="registerEmail"
+        class="form-control"
+        autocomplete="username"
+        [formField]="registerForm.email"
+        [class.is-invalid]="registerForm.email().touched() && registerForm.email().invalid()"
+        [attr.aria-invalid]="registerForm.email().touched() && registerForm.email().invalid()"
+        [attr.aria-describedby]="registerForm.email().touched() && registerForm.email().invalid() ? 'registerEmailError' : null">
+      @if (registerForm.email().touched() && registerForm.email().invalid()) {
+        <div id="registerEmailError" class="invalid-feedback">{{ registerForm.email().errors()[0].message }}</div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label for="registerPassword" class="form-label">Password</label>
+      <input
+        type="password"
+        id="registerPassword"
+        class="form-control"
+        autocomplete="new-password"
+        [formField]="registerForm.password"
+        [class.is-invalid]="registerForm.password().touched() && registerForm.password().invalid()"
+        [attr.aria-invalid]="registerForm.password().touched() && registerForm.password().invalid()"
+        [attr.aria-describedby]="registerForm.password().touched() && registerForm.password().invalid() ? 'registerPasswordHint registerPasswordError' : 'registerPasswordHint'">
+      <div id="registerPasswordHint" class="form-text">At least 8 characters.</div>
+      @if (registerForm.password().touched() && registerForm.password().invalid()) {
+        <div id="registerPasswordError" class="invalid-feedback d-block">{{ registerForm.password().errors()[0].message }}</div>
+      }
+    </div>
+
+    <button
+      type="submit"
+      class="btn btn-primary w-100 position-relative"
+      [disabled]="registerForm().invalid() || registerForm().submitting()">
+      @if (registerForm().submitting()) {
+        <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle" aria-hidden="true"></span>
+      }
+      <span [class.opacity-0]="registerForm().submitting()">Create account</span>
+    </button>
+  </form>
+
+  <p class="mt-3 mb-0">Already have an account? <a routerLink="/login">Sign in</a></p>
+</div>
