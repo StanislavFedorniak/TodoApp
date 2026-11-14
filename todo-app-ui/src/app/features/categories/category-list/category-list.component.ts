@@ -66,7 +66,11 @@ export class CategoryListComponent implements OnInit {
       });
   }
 
-  deleteCategory(id: string): void {
+  deleteCategory(category: Category): void {
+    // The backend sets CategoryId to NULL on related tasks (DeleteBehavior.SetNull), so the tasks are kept.
+    if (!confirm(`Delete category "${category.name}"? Its tasks will be kept without a category.`)) return;
+
+    const id = category.id;
     this.deletingCategoryId.set(id);
     this.error.set(null);
 

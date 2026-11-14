@@ -53,7 +53,7 @@
             [disabled]="deletingCategoryId() === category.id"
             [attr.aria-disabled]="deletingCategoryId() === category.id ? 'true' : null"
             [attr.aria-label]="'Delete category ' + category.name"
-            (click)="deleteCategory(category.id)"
+            (click)="deleteCategory(category)"
           >
             @if (deletingCategoryId() === category.id) {
               <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>

@@ -60,6 +60,12 @@ export class TaskListComponent implements OnInit{
     })
   }
 
+  // The edit form starts valid, so the error is shown as soon as the user empties the title, not only on blur.
+  showEditTitleError(): boolean {
+    const title = this.editForm.controls.title;
+    return title.invalid && (title.dirty || title.touched);
+  }
+
   categoryName(categoryId: string | null): string | null {
      if (!categoryId) return null;
      return this.categoryNames().get(categoryId) ?? null;
