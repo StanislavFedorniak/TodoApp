@@ -31,7 +31,7 @@
           <select id="taskCategory" class="form-select" formControlName="categoryId">
             <option [ngValue]="null">No Category</option>
             @for (category of categories(); track category.id) {
-              <option [value]="category.id">{{ category.name }}</option>
+              <option [ngValue]="category.id">{{ category.name }}</option>
             }
           </select>
         </div>

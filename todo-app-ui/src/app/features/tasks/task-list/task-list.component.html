@@ -36,7 +36,15 @@
                         [id]="'edit-title-' + task.id"
                         class="form-control"
                         formControlName="title"
-                        placeholder="Task title">
+                        placeholder="Task title"
+                        [class.is-invalid]="showEditTitleError()"
+                        [attr.aria-invalid]="showEditTitleError()"
+                        [attr.aria-describedby]="showEditTitleError() ? 'edit-title-error-' + task.id : null">
+                      @if (showEditTitleError()) {
+                        <div [id]="'edit-title-error-' + task.id" class="invalid-feedback" role="alert">
+                          Title is required.
+                        </div>
+                      }
                     </div>
 
                     <div class="col-md-3">
@@ -44,7 +52,7 @@
                       <select [id]="'edit-category-' + task.id" class="form-select" formControlName="categoryId">
                         <option [ngValue]="null">No Category</option>
                         @for (category of categories(); track category.id) {
-                          <option [value]="category.id">{{ category.name }}</option>
+                          <option [ngValue]="category.id">{{ category.name }}</option>
                         }
                       </select>
                     </div>
